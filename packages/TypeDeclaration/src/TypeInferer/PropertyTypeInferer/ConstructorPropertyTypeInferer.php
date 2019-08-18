@@ -13,6 +13,7 @@ use PhpParser\NodeTraverser;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockManipulator;
 use Rector\PhpParser\Node\Manipulator\PropertyFetchManipulator;
 use Rector\TypeDeclaration\Contract\TypeInferer\PropertyTypeInfererInterface;
 use Rector\TypeDeclaration\TypeInferer\AbstractTypeInferer;
@@ -25,9 +26,17 @@ final class ConstructorPropertyTypeInferer extends AbstractTypeInferer implement
      */
     private $propertyFetchManipulator;
 
-    public function __construct(PropertyFetchManipulator $propertyFetchManipulator)
-    {
+    /**
+     * @var DocBlockManipulator
+     */
+    private $docBlockManipulator;
+
+    public function __construct(
+        PropertyFetchManipulator $propertyFetchManipulator,
+        DocBlockManipulator $docBlockManipulator
+    ) {
         $this->propertyFetchManipulator = $propertyFetchManipulator;
+        $this->docBlockManipulator = $docBlockManipulator;
     }
 
     /**
@@ -41,42 +50,30 @@ final class ConstructorPropertyTypeInferer extends AbstractTypeInferer implement
             return [];
         }
 
-        $classMethod = $class->getMethod('__construct');
-        if ($classMethod === null) {
-            return [];
-        }
-
-        $propertyName = $this->nameResolver->getName($property);
-
-        $param = $this->resolveParamForPropertyFetch($classMethod, $propertyName);
-        if ($param === null) {
-            return [];
-        }
-
-        // A. infer from type declaration of parameter
-        if ($param->type) {
-            $type = $this->resolveParamTypeToString($param);
-            if ($type === null) {
-                return [];
+        $instantiatingClassMethods = [];
+        foreach ((array) $class->stmts as $classStmt) {
+            if (! $classStmt instanceof ClassMethod) {
+                continue;
             }
 
-            $types = [];
-
-            // it's an array - annotation → make type more precise, if possible
-            if ($type === 'array') {
-                $types = $this->resolveMoreSpecificArrayType($classMethod, $propertyName);
-            } else {
-                $types[] = $type;
+            if ($this->nameResolver->isName($classStmt, '__construct')) {
+                $instantiatingClassMethods[] = $classStmt;
+                continue;
             }
 
-            if ($this->isParamNullable($param)) {
-                $types[] = 'null';
+            // autowired on creation by Symfony
+            if ($this->docBlockManipulator->hasTag($classStmt, 'required')) {
+                $instantiatingClassMethods[] = $classStmt;
             }
-
-            return array_unique($types);
         }
 
-        return [];
+        $types = [];
+        foreach ($instantiatingClassMethods as $instantiatingClassMethod) {
+            $classMethodTypes = $this->inferTypesFromClassMethod($property, $instantiatingClassMethod);
+            $types = array_merge($types, $classMethodTypes);
+        }
+
+        return array_unique($types);
     }
 
     public function getPriority(): int
@@ -90,6 +87,7 @@ final class ConstructorPropertyTypeInferer extends AbstractTypeInferer implement
             $classMethod,
             $propertyName
         );
+
         if ($firstAssignedVariable === null) {
             return null;
         }
@@ -221,5 +219,40 @@ final class ConstructorPropertyTypeInferer extends AbstractTypeInferer implement
         }
 
         return implode('|', $typesAsStrings);
+    }
+
+    private function inferTypesFromClassMethod(Node\Stmt\Property $property, ClassMethod $classMethod): array
+    {
+        $propertyName = $this->nameResolver->getName($property);
+
+        $param = $this->resolveParamForPropertyFetch($classMethod, $propertyName);
+        if ($param === null) {
+            return [];
+        }
+
+        // A. infer from type declaration of parameter
+        if ($param->type) {
+            $type = $this->resolveParamTypeToString($param);
+            if ($type === null) {
+                return [];
+            }
+
+            $types = [];
+
+            // it's an array - annotation → make type more precise, if possible
+            if ($type === 'array') {
+                $types = $this->resolveMoreSpecificArrayType($classMethod, $propertyName);
+            } else {
+                $types[] = $type;
+            }
+
+            if ($this->isParamNullable($param)) {
+                $types[] = 'null';
+            }
+
+            return array_unique($types);
+        }
+
+        return [];
     }
 }
