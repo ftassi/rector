@@ -65,7 +65,7 @@ CODE_SAMPLE
      */
     public function refactor(Node $node): ?Node
     {
-        if (! $node->var instanceof Variable && ! $node->var instanceof PropertyFetch) {
+        if (! $node->var instanceof Variable && ! $node->var instanceof PropertyFetch && ! $node->var instanceof Node\Expr\StaticPropertyFetch) {
             return null;
         }
 

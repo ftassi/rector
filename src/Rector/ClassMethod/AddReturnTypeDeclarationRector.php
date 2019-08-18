@@ -27,7 +27,7 @@ final class AddReturnTypeDeclarationRector extends AbstractRector
     private $typeAnalyzer;
 
     /**
-     * @param mixed[] $typehintForMethodByClass
+     * @param string[][] $typehintForMethodByClass
      */
     public function __construct(TypeAnalyzer $typeAnalyzer, array $typehintForMethodByClass = [])
     {

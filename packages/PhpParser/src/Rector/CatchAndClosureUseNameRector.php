@@ -42,7 +42,7 @@ final class CatchAndClosureUseNameRector extends AbstractRector
         }
 
         $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if ($parentNode instanceof PropertyFetch) {
+        if ($parentNode instanceof PropertyFetch || $parentNode instanceof Node\Expr\StaticPropertyFetch) {
             return null;
         }
 

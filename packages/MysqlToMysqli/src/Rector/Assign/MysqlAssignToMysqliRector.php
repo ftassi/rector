@@ -165,7 +165,9 @@ CODE_SAMPLE
     {
         foreach ($this->fieldToFieldDirect as $funcName => $property) {
             if ($this->isName($funcCall, $funcName)) {
-                if ($funcCall->getAttribute(AttributeKey::PARENT_NODE) instanceof PropertyFetch) {
+                $parentNode = $funcCall->getAttribute(AttributeKey::PARENT_NODE);
+
+                if ($parentNode instanceof PropertyFetch || $parentNode instanceof Node\Expr\StaticPropertyFetch) {
                     continue;
                 }
 

@@ -20,8 +20,11 @@ final class SingleMethodAssignedNodePropertyTypeInferer extends AbstractTypeInfe
      */
     public function inferProperty(Property $property): array
     {
-        /** @var Class_ $class */
+        /** @var Class_|null $class */
         $class = $property->getAttribute(AttributeKey::CLASS_NODE);
+        if ($class === null) {
+            return [];
+        }
 
         $classMethod = $class->getMethod('__construct');
         if ($classMethod === null) {

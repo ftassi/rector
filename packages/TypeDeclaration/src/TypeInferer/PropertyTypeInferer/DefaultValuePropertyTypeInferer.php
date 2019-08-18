@@ -28,6 +28,6 @@ final class DefaultValuePropertyTypeInferer extends AbstractTypeInferer implemen
 
     public function getPriority(): int
     {
-        return 700;
+        return 450;
     }
 }

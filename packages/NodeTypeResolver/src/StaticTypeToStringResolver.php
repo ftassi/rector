@@ -42,7 +42,7 @@ final class StaticTypeToStringResolver
                 $types = $this->resolveObjectType($arrayType->getItemType());
 
                 if ($types === []) {
-                    return ['array'];
+                    return ['mixed[]'];
                 }
 
                 foreach ($types as $key => $type) {

@@ -276,7 +276,7 @@ final class NodeTypeResolver
             return true;
         }
 
-        if ($node instanceof PropertyFetch) {
+        if ($node instanceof PropertyFetch || $node instanceof Expr\StaticPropertyFetch) {
             // PHPStan false positive, when variable has type[] docblock, but default array is missing
             if ($this->isPropertyFetchWithArrayDefault($node) === false) {
                 return false;
@@ -544,7 +544,7 @@ final class NodeTypeResolver
      */
     private function isPropertyFetchWithArrayDefault(Node $node): bool
     {
-        if (! $node instanceof PropertyFetch) {
+        if (! $node instanceof PropertyFetch && ! $node instanceof Expr\StaticPropertyFetch) {
             return false;
         }
 

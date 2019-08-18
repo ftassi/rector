@@ -4,13 +4,12 @@ namespace Rector\PhpParser\Printer;
 
 use Nette\Utils\FileSystem;
 use PhpParser\Node;
-use PhpParser\PrettyPrinter\Standard;
 use Symplify\PackageBuilder\FileSystem\SmartFileInfo;
 
 final class FormatPerservingPrinter
 {
     /**
-     * @var BetterStandardPrinter|Standard
+     * @var BetterStandardPrinter
      */
     private $betterStandardPrinter;
 

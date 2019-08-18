@@ -32,7 +32,7 @@ final class ParentTypehintedArgumentRector extends AbstractRector
     private $typeAnalyzer;
 
     /**
-     * @param mixed[] $typehintForArgumentByMethodAndClass
+     * @param string[][][] $typehintForArgumentByMethodAndClass
      */
     public function __construct(TypeAnalyzer $typeAnalyzer, array $typehintForArgumentByMethodAndClass = [])
     {

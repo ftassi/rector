@@ -3,6 +3,7 @@
 namespace Rector\TypeDeclaration\TypeInferer\PropertyTypeInferer;
 
 use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
@@ -29,8 +30,11 @@ final class GetterOrSetterPropertyTypeInferer extends AbstractTypeInferer implem
      */
     public function inferProperty(Property $property): array
     {
-        /** @var Class_ $class */
+        /** @var Class_|null $class */
         $class = $property->getAttribute(AttributeKey::CLASS_NODE);
+        if ($class === null) {
+            return [];
+        }
 
         /** @var string $propertyName */
         $propertyName = $this->nameResolver->getName($property);
@@ -70,7 +74,7 @@ final class GetterOrSetterPropertyTypeInferer extends AbstractTypeInferer implem
         /** @var Return_ $return */
         $return = $onlyClassMethodStmt;
 
-        if (! $return->expr instanceof PropertyFetch) {
+        if (! $return->expr instanceof PropertyFetch && ! $return->expr instanceof StaticPropertyFetch) {
             return false;
         }
 

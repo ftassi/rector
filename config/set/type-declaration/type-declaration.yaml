@@ -5,3 +5,4 @@ services:
     Rector\TypeDeclaration\Rector\Closure\AddClosureReturnTypeRector: ~
     Rector\TypeDeclaration\Rector\ClassMethod\AddArrayParamDocTypeRector: ~
     Rector\TypeDeclaration\Rector\ClassMethod\AddArrayReturnDocTypeRector: ~
+    Rector\TypeDeclaration\Rector\Property\FixVarDocTypePropertyRector: ~

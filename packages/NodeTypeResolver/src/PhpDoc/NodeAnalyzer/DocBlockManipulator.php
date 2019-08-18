@@ -263,6 +263,10 @@ final class DocBlockManipulator
      */
     public function changeVarTag(Node $node, $type): void
     {
+        if ($this->isCurrentTypeAlreadyAdded($type, $node)) {
+            return;
+        }
+
         $this->removeTagFromNode($node, 'var', true);
         $this->addTypeSpecificTag($node, 'var', $type);
     }
@@ -642,7 +646,6 @@ final class DocBlockManipulator
     private function resolveNodeType(TypeNode $typeNode): string
     {
         $nodeType = $typeNode->getAttribute(Attribute::RESOLVED_NAME);
-
         if ($nodeType === null) {
             $nodeType = $typeNode->getAttribute(Attribute::TYPE_AS_STRING);
         }
@@ -746,5 +749,39 @@ final class DocBlockManipulator
         }
 
         return implode($joinChar, $types);
+    }
+
+    /**
+     * @param string|string[]|IdentifierValueObject|IdentifierValueObject[] $type
+     */
+    private function isCurrentTypeAlreadyAdded($type, Node $node): bool
+    {
+        // make sure the tags are not identical, e.g imported class vs FQN class
+        $varTagInfo = $this->getVarTypeInfo($node);
+        if ($varTagInfo === null) {
+            return false;
+        }
+
+        if (is_array($type)) {
+            foreach ($type as $key => $singleType) {
+                if (is_string($singleType)) {
+                    $type[$key] = ltrim($singleType, '\\');
+                }
+            }
+        }
+
+        $currentTypes = $varTagInfo->getFqnTypes();
+        if ($type === $currentTypes) {
+            return true;
+        }
+
+        if (is_array($type)) {
+            sort($currentTypes);
+            sort($type);
+
+            return $currentTypes === $type;
+        }
+
+        return false;
     }
 }

@@ -82,7 +82,7 @@ final class ComplexNodeTypeResolver
         $propertyAssignNodes = $this->betterNodeFinder->find([$classNode], function (Node $node) use (
             $propertyName
         ): bool {
-            if ($node instanceof Assign && $node->var instanceof PropertyFetch) {
+            if ($node instanceof Assign && ($node->var instanceof PropertyFetch || $node->var instanceof Node\Expr\StaticPropertyFetch)) {
                 // is property match
                 return $this->nameResolver->isName($node->var, $propertyName);
             }

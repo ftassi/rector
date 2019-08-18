@@ -4,8 +4,11 @@ namespace Rector\PhpParser\Node\Manipulator;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\NodeTraverser;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Type\ObjectType;
@@ -109,7 +112,7 @@ final class PropertyFetchManipulator
                 return null;
             }
 
-            /** @var Node\Expr\Assign $node */
+            /** @var Assign $node */
             $propertyName = $this->nameResolver->getName($node->expr);
             if ($propertyName) {
                 $propertyNames[] = $propertyName;
@@ -127,11 +130,11 @@ final class PropertyFetchManipulator
      */
     public function isVariableAssignToThisPropertyFetch(Node $node, string $variableName): bool
     {
-        if (! $node instanceof Node\Expr\Assign) {
+        if (! $node instanceof Assign) {
             return false;
         }
 
-        if (! $node->expr instanceof Node\Expr\Variable) {
+        if (! $node->expr instanceof Variable) {
             return false;
         }
 
@@ -156,14 +159,11 @@ final class PropertyFetchManipulator
      */
     public function isLocalPropertyOfNames(Expr $expr, array $propertyNames): bool
     {
-        if (! $expr instanceof PropertyFetch) {
-            return false;
-        }
-
         if (! $this->isLocalProperty($expr)) {
             return false;
         }
 
+        /** @var PropertyFetch $expr */
         return $this->nameResolver->isNames($expr->name, $propertyNames);
     }
 
@@ -174,6 +174,36 @@ final class PropertyFetchManipulator
         }
 
         return $this->nameResolver->isName($node->var, 'this');
+    }
+
+    public function getFirstVariableAssignedToPropertyOfName(
+        Node\Stmt\ClassMethod $classMethod,
+        string $propertyName
+    ): ?Variable {
+        $variable = null;
+
+        $this->callableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use (
+            $propertyName,
+            &$variable
+        ): ?int {
+            if (! $node instanceof Assign) {
+                return null;
+            }
+
+            if (! $this->isLocalPropertyOfNames($node->var, [$propertyName])) {
+                return null;
+            }
+
+            if (! $node->expr instanceof Variable) {
+                return null;
+            }
+
+            $variable = $node->expr;
+
+            return NodeTraverser::STOP_TRAVERSAL;
+        });
+
+        return $variable;
     }
 
     private function hasPublicProperty(PropertyFetch $propertyFetch, string $propertyName): bool

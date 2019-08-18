@@ -63,8 +63,6 @@ final class FqnAnnotationTypeDecorator implements PhpDocNodeDecoratorInterface
             return $tagShortName;
         }
 
-        // @todo use Use[] nodes?
-
         return Reflection::expandClassName($tagShortName, new ReflectionClass($className));
     }
 }

@@ -11,6 +11,8 @@ use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\AttributeAwareParamTagValueN
 use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\AttributeAwarePhpDocNode;
 use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\AttributeAwareReturnTagValueNode;
 use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\AttributeAwareVarTagValueNode;
+use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\Type\AttributeAwareArrayTypeNode;
+use Rector\BetterPhpDocParser\Attributes\Ast\PhpDoc\Type\AttributeAwareIdentifierTypeNode;
 use Rector\BetterPhpDocParser\Attributes\Attribute\Attribute;
 use Rector\BetterPhpDocParser\Attributes\Contract\Ast\AttributeAwareNodeInterface;
 
@@ -226,6 +228,25 @@ final class PhpDocInfo
      */
     private function getResolvedTypesAttribute(PhpDocTagValueNode $phpDocTagValueNode): array
     {
+        if ($phpDocTagValueNode instanceof AttributeAwareVarTagValueNode) {
+            if ($phpDocTagValueNode->type instanceof AttributeAwareArrayTypeNode) {
+                $arrayNesting = 1;
+                $currentType = $phpDocTagValueNode->type;
+                while ($currentType->type instanceof AttributeAwareArrayTypeNode) {
+                    ++$arrayNesting;
+
+                    $currentType = $currentType->type;
+                }
+
+                if ($currentType->type instanceof AttributeAwareIdentifierTypeNode) {
+                    $arrayType = $currentType->type->getAttribute(Attribute::RESOLVED_NAME);
+                    if ($arrayType) {
+                        return [$arrayType . str_repeat('[]', $arrayNesting)];
+                    }
+                }
+            }
+        }
+
         if ($phpDocTagValueNode->getAttribute(Attribute::RESOLVED_NAMES)) {
             return $phpDocTagValueNode->getAttribute(Attribute::RESOLVED_NAMES);
         }
