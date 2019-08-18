@@ -56,12 +56,12 @@ final class AssignManipulator
         }
 
         /** @var Assign $node */
-        if ($node->expr instanceof ArrayDimFetch) {
+        if ($node->var instanceof ArrayDimFetch) {
             /** @var PropertyFetch|StaticPropertyFetch $propertyFetch */
-            $propertyFetch = $node->expr->var;
+            $propertyFetch = $node->var->var;
         } else {
             /** @var PropertyFetch|StaticPropertyFetch $propertyFetch */
-            $propertyFetch = $node->expr;
+            $propertyFetch = $node->var;
         }
 
         return $this->nameResolver->isNames($propertyFetch, $propertyNames);

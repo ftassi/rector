@@ -26,6 +26,7 @@ final class SingleMethodAssignedNodePropertyTypeInferer extends AbstractTypeInfe
             return [];
         }
 
+        /** @var string $propertyName */
         $propertyName = $this->nameResolver->getName($property);
 
         $types = [];
@@ -73,7 +74,7 @@ final class SingleMethodAssignedNodePropertyTypeInferer extends AbstractTypeInfe
         return $assignedNode;
     }
 
-    private function resolvePorpertyTypeFromClassMethod(?ClassMethod $classMethod, ?string $propertyName): array
+    private function resolvePorpertyTypeFromClassMethod(ClassMethod $classMethod, string $propertyName): array
     {
         $assignedNode = $this->resolveAssignedNodeToProperty($classMethod, $propertyName);
         if ($assignedNode === null) {

@@ -5,10 +5,6 @@ namespace Rector\TypeDeclaration\Tests\Rector\Property\FixVarDocTypePropertyRect
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Expression;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\ConfiguredCodeSample;
-use Rector\RectorDefinition\RectorDefinition;
 
 final class MakePriorityWin
 {
@@ -28,23 +24,8 @@ final class MakePriorityWin
         for ($i = $classMethodStatementCount - 1; $i >= 0; --$i) {
             $stmt = $node->stmts[$i];
 
-            // we look only for 2+ stmts
-            if (! isset($node->stmts[$i - 1])) {
-                continue;
-            }
-
-            // we look for 2 methods calls in a row
-            if (! $stmt instanceof Expression) {
-                continue;
-            }
-
-            $prevStmt = $node->stmts[$i - 1];
-            if (! $prevStmt instanceof Expression) {
-                continue;
-            }
-
             // here are 2 method calls statements in a row, while current one is first one
-            if (! $this->isBothMethodCallMatch($stmt, $prevStmt)) {
+            if (! isset($node->stmts[251])) {
                 // reset for new type
                 $this->collectedMethodCalls = [];
 
@@ -56,35 +37,13 @@ final class MakePriorityWin
             $methodCall = $stmt->expr;
             $this->collectedMethodCalls[$i] = $methodCall;
 
+            $prevStmt = $node->stmts[$i - 1];
+
             /** @var MethodCall $previousMethodCall */
             $previousMethodCall = $prevStmt->expr;
             $this->collectedMethodCalls[$i - 1] = $previousMethodCall;
         }
 
         return $node;
-    }
-
-    private function isBothMethodCallMatch(Expression $firstStmt, Expression $secondStmt): bool
-    {
-        if (! $firstStmt->expr instanceof MethodCall) {
-            return false;
-        }
-
-        if (! $secondStmt->expr instanceof MethodCall) {
-            return false;
-        }
-
-        $firstMethodCallMatch = $this->matchMethodCall($firstStmt->expr);
-        if ($firstMethodCallMatch === null) {
-            return false;
-        }
-
-        $secondMethodCallMatch = $this->matchMethodCall($secondStmt->expr);
-        if ($secondMethodCallMatch === null) {
-            return false;
-        }
-
-        // is the same type
-        return $firstMethodCallMatch === $secondMethodCallMatch;
     }
 }
