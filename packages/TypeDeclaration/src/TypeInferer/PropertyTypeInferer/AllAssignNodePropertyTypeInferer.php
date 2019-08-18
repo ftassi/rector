@@ -10,6 +10,7 @@ use PhpParser\Node\Stmt\Property;
 use PHPStan\Type\IntersectionType;
 use PHPStan\Type\NullType;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockManipulator;
 use Rector\TypeDeclaration\Contract\TypeInferer\PropertyTypeInfererInterface;
 use Rector\TypeDeclaration\TypeInferer\AbstractTypeInferer;
 use Rector\TypeDeclaration\TypeInferer\AssignToPropertyTypeInferer;
@@ -21,9 +22,17 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
      */
     private $assignToPropertyTypeInferer;
 
-    public function __construct(AssignToPropertyTypeInferer $assignToPropertyTypeInferer)
-    {
+    /**
+     * @var DocBlockManipulator
+     */
+    private $docBlockManipulator;
+
+    public function __construct(
+        AssignToPropertyTypeInferer $assignToPropertyTypeInferer,
+        DocBlockManipulator $docBlockManipulator
+    ) {
         $this->assignToPropertyTypeInferer = $assignToPropertyTypeInferer;
+        $this->docBlockManipulator = $docBlockManipulator;
     }
 
     /**
@@ -45,8 +54,7 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
         }
 
         // assign after constructor/setUp, without default value is definitely nullable
-        $propertyDefautValue = $property->props[0]->default;
-        if ($propertyDefautValue === null || $this->isNull($propertyDefautValue)) {
+        if ($this->isNullableType($property)) {
             $assignedExprStaticTypes[] = new NullType();
         }
 
@@ -107,5 +115,20 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
         }
 
         return $this->nameResolver->isNameInsensitive($expr, 'null');
+    }
+
+    private function isNullableType(Property $property): bool
+    {
+        // value object
+        if ($this->docBlockManipulator->hasTag($property, 'JMS\Serializer\Annotation\Type')) {
+            return false;
+        }
+
+        $propertyDefautValue = $property->props[0]->default;
+        if ($propertyDefautValue === null || $this->isNull($propertyDefautValue)) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -19,7 +19,7 @@ final class SetterType
      */
     public function setName($name)
     {
-        return $this->name = $name;
+        $this->name = $name;
     }
 }
 
@@ -34,11 +34,11 @@ namespace Rector\TypeDeclaration\Tests\Rector\FunctionLike\PropertyTypeDeclarati
 final class SetterType
 {
     /**
-     * @var string
+     * @var string|null
      */
     private $email;
     /**
-     * @var string
+     * @var string|null
      */
     private $name;
 
@@ -52,7 +52,7 @@ final class SetterType
      */
     public function setName($name)
     {
-        return $this->name = $name;
+        $this->name = $name;
     }
 }
 
