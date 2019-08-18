@@ -3,11 +3,13 @@
 namespace Rector\PhpParser\Node\Manipulator;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Expr\StaticPropertyFetch;
 use Rector\PhpParser\Node\Resolver\NameResolver;
 
 final class AssignManipulator
@@ -25,6 +27,7 @@ final class AssignManipulator
     /**
      * Checks:
      * $this->x = y;
+     * $this->x[] = y;
      */
     public function isLocalPropertyAssign(Node $node): bool
     {
@@ -32,15 +35,13 @@ final class AssignManipulator
             return false;
         }
 
-        if (! $node->var instanceof PropertyFetch) {
-            return false;
+        if ($node->var instanceof ArrayDimFetch) {
+            $potentialPropertyFetch = $node->var->var;
+        } else {
+            $potentialPropertyFetch = $node->var;
         }
 
-        if (! $node->var->var instanceof Variable) {
-            return false;
-        }
-
-        return $this->nameResolver->isName($node->var->var, 'this');
+        return $potentialPropertyFetch instanceof PropertyFetch || $potentialPropertyFetch instanceof StaticPropertyFetch;
     }
 
     /**
@@ -55,10 +56,31 @@ final class AssignManipulator
         }
 
         /** @var Assign $node */
-        $propertyFetch = $node->expr;
+        if ($node->expr instanceof ArrayDimFetch) {
+            /** @var PropertyFetch|StaticPropertyFetch $propertyFetch */
+            $propertyFetch = $node->expr->var;
+        } else {
+            /** @var PropertyFetch|StaticPropertyFetch $propertyFetch */
+            $propertyFetch = $node->expr;
+        }
 
-        /** @var PropertyFetch $propertyFetch */
         return $this->nameResolver->isNames($propertyFetch, $propertyNames);
+    }
+
+    /**
+     * Covers:
+     * - $this->propertyName = <$expr>;
+     * - self::$propertyName = <$expr>;
+     * - $this->propertyName[] = <$expr>;
+     * - self::$propertyName[] = <$expr>;
+     */
+    public function matchPropertyAssignExpr(Assign $assign, string $propertyName): ?Expr
+    {
+        if (! $this->isLocalPropertyAssignWithPropertyNames($assign, [$propertyName])) {
+            return null;
+        }
+
+        return $assign->expr;
     }
 
     /**

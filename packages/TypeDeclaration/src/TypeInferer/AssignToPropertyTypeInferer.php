@@ -10,10 +10,22 @@ use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\MixedType;
+use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
+use Rector\PhpParser\Node\Manipulator\AssignManipulator;
 
 final class AssignToPropertyTypeInferer extends AbstractTypeInferer
 {
+    /**
+     * @var AssignManipulator
+     */
+    private $assignManipulator;
+
+    public function __construct(AssignManipulator $assignManipulator)
+    {
+        $this->assignManipulator = $assignManipulator;
+    }
+
     /**
      * @return Type[]
      */
@@ -29,7 +41,7 @@ final class AssignToPropertyTypeInferer extends AbstractTypeInferer
                 return null;
             }
 
-            $expr = $this->matchPropertyAssignExpr($node, $propertyName);
+            $expr = $this->assignManipulator->matchPropertyAssignExpr($node, $propertyName);
             if ($expr === null) {
                 return null;
             }
@@ -52,13 +64,16 @@ final class AssignToPropertyTypeInferer extends AbstractTypeInferer
             return null;
         });
 
+        // nullable?
+//        $assignedExprStaticTypes[] = new NullType();
+
         return $this->filterOutDuplicatedTypes($assignedExprStaticTypes);
     }
 
     /**
      * Covers:
-     * - $this->propertyName = $expr;
-     * - $this->propertyName[] = $expr;
+     * - $this->propertyName = <$expr>;
+     * - $this->propertyName[] = <$expr>;
      */
     private function matchPropertyAssignExpr(Assign $assign, string $propertyName): ?Node\Expr
     {
