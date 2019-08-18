@@ -3,6 +3,8 @@
 namespace Rector\TypeDeclaration\TypeInferer\PropertyTypeInferer;
 
 use Nette\Utils\Strings;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Type\IntersectionType;
@@ -43,7 +45,8 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
         }
 
         // assign after constructor/setUp, without default value is definitely nullable
-        if ($property->props[0]->default === null) {
+        $propertyDefautValue = $property->props[0]->default;
+        if ($propertyDefautValue === null || $this->isNull($propertyDefautValue)) {
             $assignedExprStaticTypes[] = new NullType();
         }
 
@@ -95,5 +98,14 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
         }
 
         return false;
+    }
+
+    private function isNull(Expr $expr): bool
+    {
+        if (! $expr instanceof ConstFetch) {
+            return false;
+        }
+
+        return $this->nameResolver->isNameInsensitive($expr, 'null');
     }
 }

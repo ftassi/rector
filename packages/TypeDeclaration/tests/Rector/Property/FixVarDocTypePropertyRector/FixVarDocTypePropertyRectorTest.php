@@ -15,6 +15,7 @@ final class FixVarDocTypePropertyRectorTest extends AbstractRectorTestCase
             __DIR__ . '/Fixture/make_priority_win.php.inc',
             __DIR__ . '/Fixture/argument_with_default.php.inc',
             __DIR__ . '/Fixture/conditional_types.php.inc',
+            __DIR__ . '/Fixture/nullable_type_with_default_value.php.inc',
             // keep
             __DIR__ . '/Fixture/skip_different_order.php.inc',
             __DIR__ . '/Fixture/keep_already_existing.php.inc',
