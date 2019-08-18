@@ -4,6 +4,8 @@ namespace Rector\PhpParser\Node\Manipulator;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use Rector\PhpParser\Node\Resolver\NameResolver;
@@ -57,5 +59,22 @@ final class AssignManipulator
 
         /** @var PropertyFetch $propertyFetch */
         return $this->nameResolver->isNames($propertyFetch, $propertyNames);
+    }
+
+    /**
+     * Matches:
+     * each() = [1, 2];
+     */
+    public function isListToEachAssign(Assign $assign): bool
+    {
+        if (! $assign->expr instanceof FuncCall) {
+            return false;
+        }
+
+        if (! $assign->var instanceof List_) {
+            return false;
+        }
+
+        return $this->nameResolver->isName($assign->expr, 'each');
     }
 }
