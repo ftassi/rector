@@ -6,6 +6,7 @@ use Nette\Utils\Strings;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Type\IntersectionType;
+use PHPStan\Type\NullType;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\TypeDeclaration\Contract\TypeInferer\PropertyTypeInfererInterface;
 use Rector\TypeDeclaration\TypeInferer\AbstractTypeInferer;
@@ -39,6 +40,11 @@ final class AllAssignNodePropertyTypeInferer extends AbstractTypeInferer impleme
         $assignedExprStaticTypes = $this->assignToPropertyTypeInferer->inferPropertyInClassLike($propertyName, $class);
         if ($assignedExprStaticTypes === []) {
             return [];
+        }
+
+        // assign after constructor/setUp, without default value is definitely nullable
+        if ($property->props[0]->default === null) {
+            $assignedExprStaticTypes[] = new NullType();
         }
 
         $assignedExprStaticType = new IntersectionType($assignedExprStaticTypes);
