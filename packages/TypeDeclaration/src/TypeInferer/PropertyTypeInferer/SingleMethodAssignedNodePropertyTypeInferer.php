@@ -26,26 +26,23 @@ final class SingleMethodAssignedNodePropertyTypeInferer extends AbstractTypeInfe
             return [];
         }
 
-        $classMethod = $class->getMethod('__construct');
-        if ($classMethod === null) {
-            return [];
-        }
-
         $propertyName = $this->nameResolver->getName($property);
 
-        $assignedNode = $this->resolveAssignedNodeToProperty($classMethod, $propertyName);
-        if ($assignedNode === null) {
-            return [];
+        $types = [];
+        $constructorClassMethod = $class->getMethod('__construct');
+        if ($constructorClassMethod !== null) {
+            $constructorTypes = $this->resolvePorpertyTypeFromClassMethod($constructorClassMethod, $propertyName);
+            $types = array_merge($types, $constructorTypes);
         }
 
-        $nodeStaticType = $this->nodeTypeResolver->getNodeStaticType($assignedNode);
-
-        $stringTypes = $this->staticTypeToStringResolver->resolveObjectType($nodeStaticType);
-        if ($stringTypes === []) {
-            return [];
+        // PHPUnit setup
+        $phpUnitClassMethod = $class->getMethod('setUp');
+        if ($phpUnitClassMethod !== null) {
+            $phpUnitTypes = $this->resolvePorpertyTypeFromClassMethod($phpUnitClassMethod, $propertyName);
+            $types = array_merge($types, $phpUnitTypes);
         }
 
-        return array_unique($stringTypes);
+        return $types;
     }
 
     public function getPriority(): int
@@ -74,5 +71,22 @@ final class SingleMethodAssignedNodePropertyTypeInferer extends AbstractTypeInfe
         });
 
         return $assignedNode;
+    }
+
+    private function resolvePorpertyTypeFromClassMethod(?ClassMethod $classMethod, ?string $propertyName): array
+    {
+        $assignedNode = $this->resolveAssignedNodeToProperty($classMethod, $propertyName);
+        if ($assignedNode === null) {
+            return [];
+        }
+
+        $nodeStaticType = $this->nodeTypeResolver->getNodeStaticType($assignedNode);
+
+        $stringTypes = $this->staticTypeToStringResolver->resolveObjectType($nodeStaticType);
+        if ($stringTypes === []) {
+            return [];
+        }
+
+        return array_unique($stringTypes);
     }
 }
