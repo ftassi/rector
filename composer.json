@@ -31,7 +31,6 @@
         "friendsofphp/php-cs-fixer": "^2.14",
         "mockery/mockery": "^1.2",
         "ocramius/package-versions": "^1.4",
-        "phpstan/phpstan-phpunit": "^0.11.2",
         "phpunit/phpunit": "^7.5|^8.0",
         "symplify/changelog-linker": "^6.0.1",
         "symplify/easy-coding-standard": "^6.0.1",
